@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 WANT = {"JP": "日本", "SG": "新加坡", "US": "美国", "NL": "荷兰",
         "CH": "瑞士", "CA": "加拿大", "PL": "波兰", "RO": "罗马尼亚",
         "NO": "挪威", "MX": "墨西哥"}
-PER_COUNTRY = 3     # 每国取几台
+PER_COUNTRY = 200     # 每国取几台
 
 
 def ed25519_to_wg(raw_sk: bytes) -> str:
