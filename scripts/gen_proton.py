@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives import serialization
 WANT = {"JP": "日本", "SG": "新加坡", "US": "美国", "NL": "荷兰",
         "CH": "瑞士", "CA": "加拿大", "PL": "波兰", "RO": "罗马尼亚",
         "NO": "挪威", "MX": "墨西哥"}
-PER_COUNTRY = 200    # 修改这里可以增加每国取几台（比如改成 10 或更多）
+PER_COUNTRY = all     # 每国取几台
 
 
 def ed25519_to_wg(raw_sk: bytes) -> str:
@@ -64,31 +64,17 @@ async def main():
     picked, by_cc = [], {}
     for srv in sorted(free, key=lambda x: x.get("Score", 99)):
         cc = srv["ExitCountry"]
-        # 如果想获取 WANT 之外的所有国家，可以把 "cc not in WANT or" 这段删掉
         if cc not in WANT or by_cc.get(cc, 0) >= PER_COUNTRY:
             continue
         phys = (srv.get("Servers") or [{}])[0]
         pub = phys.get("X25519PublicKey")
-        
-        # 同时提取 IPv4 和 IPv6 地址，确保 Worker 能用上 IPv6
         ip = phys.get("EntryIP")
-        ipv6 = phys.get("EntryIPv6")
-        
-        if not (pub and (ip or ipv6)):
+        if not (pub and ip):
             continue
-            
         by_cc[cc] = by_cc.get(cc, 0) + 1
-        
-        # 兼容处理国家名称映射
-        country_name = WANT.get(cc, cc)
-        
         picked.append({
-            "name": f"{country_name}{by_cc[cc]}",
-            "cc": cc, 
-            "ip": ip,          # IPv4 地址
-            "ipv6": ipv6,      # IPv6 地址
-            "port": 51820, 
-            "pub": pub,
+            "name": f"{WANT[cc]}{by_cc[cc]}",
+            "cc": cc, "ip": ip, "port": 51820, "pub": pub,
         })
 
     print(f"选中 {len(picked)} 台，覆盖 {len(by_cc)} 国: "
